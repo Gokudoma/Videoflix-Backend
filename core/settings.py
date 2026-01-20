@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_rq',
     'authentication_app',
-    'video_app',
+    'video_app', 
 ]
 
 MIDDLEWARE = [
@@ -125,3 +125,6 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# --- Custom User Model ---
+AUTH_USER_MODEL = 'authentication_app.CustomUser'
