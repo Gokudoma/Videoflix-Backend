@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django_rq',
     'authentication_app',
     'video_app', 
+    'django_rq',
 ]
 
 MIDDLEWARE = [
@@ -43,6 +44,18 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+RQ_QUEUES = {
+    'default': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'DB': 0,
+        'PASSWORD': 'foobared',
+        'DEFAULT_TIMEOUT': 360,
+    },
+},
+
+RQ_EXCEPTION_HANDLERS = ['path.to.my.handler']  # If you need custom exception handlers
 
 ROOT_URLCONF = 'core.urls'
 
