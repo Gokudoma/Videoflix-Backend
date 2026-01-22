@@ -26,6 +26,10 @@ def _convert(source, label, resolution_cmd):
     """
     Internal helper function to run the ffmpeg command.
 
+    It runs ffmpeg via subprocess.Popen to execute the conversion
+    asynchronously in the background. This allows the single worker
+    to handle multiple conversion tasks in parallel.
+
     Args:
         source (str): Path to the source file.
         label (str): Label for the new filename (e.g., '720p').
@@ -38,4 +42,5 @@ def _convert(source, label, resolution_cmd):
         'ffmpeg', '-i', source, '-s', resolution_cmd, '-c:v', 'libx264', '-crf', '23', '-c:a', 'aac', '-strict', '-2', target
     ]
 
-    subprocess.run(cmd, capture_output=True)
+    # Run ffmpeg in the background (non-blocking)
+    subprocess.Popen(cmd)
