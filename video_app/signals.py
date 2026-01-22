@@ -21,13 +21,18 @@ def video_post_save(sender, instance, created, **kwargs):
         # queue.enqueue(convert_480p, instance.video_file.path)
 
 
-#@receiver(post_delete, sender=Video)
-#def video_post_delete(sender, instance, **kwargs):
-#  """
-#  Triggered when a Video object is deleted.
-#  Deletes the actual file from the filesystem to clean up.
-#   """
-#if instance.video_file:
-#    if os.path.isfile(instance.video_file.path):
-#       os.remove(instance.video_file.path)
-#    print(f'File deleted: {instance.video_file.path}')
+@receiver(post_delete, sender=Video)
+def video_post_delete(sender, instance, **kwargs):
+    """
+    Deletes the file from the filesystem when the Video object is deleted.
+    """
+    print(f'Video deleted: {instance.title} (ID: {instance.id})')
+
+    if instance.video_file:
+        if os.path.isfile(instance.video_file.path):
+            os.remove(instance.video_file.path)
+            print(f'File deleted: {instance.video_file.path}')
+        else:
+            print('File not found on disk (Cleanup skipped)')
+    else:
+        print('No video file attached (Cleanup skipped)')
