@@ -1,8 +1,5 @@
 """
 Django settings for the Videoflix project.
-
-This configuration uses environment variables to ensure security and flexibility,
-especially for database and debug settings.
 """
 
 from pathlib import Path
@@ -17,7 +14,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='django-insecure-@#x5h3zj!g+8g1v@2^
 
 DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="localhost").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",")
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="http://localhost:8000").split(",")
 
 INSTALLED_APPS = [
@@ -27,13 +24,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third Party Apps
     'rest_framework',
+    'corsheaders',    
     'django_rq',
+    'debug_toolbar',
+    # Custom Apps
     'authentication_app',
     'video_app', 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',         
+    'debug_toolbar.middleware.DebugToolbarMiddleware',    
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -44,21 +47,18 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-RQ_QUEUES = {
-    'default': {
-        'HOST': 'localhost',
-        'PORT': 6379,
-        'DB': 0,
-        'DEFAULT_TIMEOUT': 360,
-    },
-},
+CORS_ALLOW_ALL_ORIGINS = True 
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -72,17 +72,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+# --- Database (Docker Setup) ---
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DB_NAME", default="videoflix_db"),
         "USER": os.environ.get("DB_USER", default="videoflix_user"),
         "PASSWORD": os.environ.get("DB_PASSWORD", default="supersecretpassword"),
-        "HOST": os.environ.get("DB_HOST", default="db"),
+        "HOST": os.environ.get("DB_HOST", default="db"), 
         "PORT": os.environ.get("DB_PORT", default=5432)
     }
 }
 
+# --- Cache (Redis) ---
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -97,34 +99,23 @@ CACHES = {
 RQ_QUEUES = {
     'default': {
         'HOST': os.environ.get("REDIS_HOST", default="redis"),
-        'PORT': os.environ.get("REDIS_PORT", default=6379),
-        'DB': os.environ.get("REDIS_DB", default=0),
+        'PORT': int(os.environ.get("REDIS_PORT", 6379)),
+        'DB': int(os.environ.get("REDIS_DB", 0)),
         'DEFAULT_TIMEOUT': 900,
-        'REDIS_CLIENT_KWARGS': {},
+        # 'REDIS_CLIENT_KWARGS': {}, # Brauchen wir erst mal nicht
     },
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = "/static/"
@@ -137,3 +128,14 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # --- Custom User Model ---
 AUTH_USER_MODEL = 'authentication_app.CustomUser'
+
+# --- Email Configuration ---
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_HOST = os.getenv('EMAIL_HOST', "")
+EMAIL_PORT = os.getenv('EMAIL_PORT', "587")
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', "")
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', "")
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == "true"
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() == "true"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Videoflix <no-reply@videoflix.test>")
