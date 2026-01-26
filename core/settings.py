@@ -100,7 +100,7 @@ RQ_QUEUES = {
         'PORT': int(os.environ.get("REDIS_PORT", 6379)),
         'DB': int(os.environ.get("REDIS_DB", 0)),
         'DEFAULT_TIMEOUT': 900,
-        # 'REDIS_CLIENT_KWARGS': {}, # Brauchen wir erst mal nicht
+        # 'REDIS_CLIENT_KWARGS': {}, # Not needed for now
     },
 }
 
@@ -137,3 +137,10 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', "")
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == "true"
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() == "true"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Videoflix <no-reply@videoflix.test>")
+
+# --- REST Framework Configuration (JWT) ---
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}

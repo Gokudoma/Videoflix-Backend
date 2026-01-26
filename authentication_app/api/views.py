@@ -3,11 +3,13 @@ from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.urls import reverse
-from .serializers import RegistrationSerializer
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+import django_rq
+
+from .serializers import RegistrationSerializer, LoginSerializer
 from ..models import CustomUser
 from ..tasks import send_activation_email
-import django_rq
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -64,3 +66,56 @@ class ActivateAccountView(generics.GenericAPIView):
             return Response({"message": "Account successfully activated."}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Activation link is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginView(generics.GenericAPIView):
+    """
+    API endpoint for user login.
+    Returns JWT tokens in HttpOnly cookies and user info in body.
+    """
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+
+        # Authenticate user (email is mapped to username in our CustomUser)
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            # Generate Tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            
+            # Response Data (matches screenshot requirements)
+            response_data = {
+                "detail": "Login successful",
+                "user": {
+                    "id": user.id,
+                    "username": user.email  # Map email to 'username' key as per docs
+                }
+            }
+
+            response = Response(response_data, status=status.HTTP_200_OK)
+
+            # Set HttpOnly Cookies (Secure flag commented out for localhost dev)
+            response.set_cookie(
+                'access_token', 
+                access_token, 
+                httponly=True, 
+                samesite='Lax'
+                # secure=True # Uncomment in production with HTTPS
+            )
+            response.set_cookie(
+                'refresh_token', 
+                str(refresh), 
+                httponly=True, 
+                samesite='Lax'
+            )
+
+            return response
+        
+        return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)

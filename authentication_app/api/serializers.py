@@ -41,3 +41,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.is_active = False  # Deactivate account until email verification
         user.save()
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    """
+    Serializer for the login request.
+    Validates that email and password are provided.
+    """
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
