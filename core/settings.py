@@ -28,15 +28,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',    
     'django_rq',
-    'debug_toolbar',
     # Custom Apps
     'authentication_app',
     'video_app', 
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',         
-    'debug_toolbar.middleware.DebugToolbarMiddleware',    
+    'corsheaders.middleware.CorsMiddleware',             
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
