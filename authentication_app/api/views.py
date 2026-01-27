@@ -9,9 +9,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 import django_rq
 
-from .serializers import RegistrationSerializer, LoginSerializer
+from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetSerializer
 from ..models import CustomUser
-from ..tasks import send_activation_email
+from ..tasks import send_activation_email, send_password_reset_email
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -181,3 +181,38 @@ class CookieTokenRefreshView(TokenRefreshView):
         )
         
         return response
+
+
+class PasswordResetView(generics.GenericAPIView):
+    """
+    API endpoint to request a password reset email.
+    
+    If the email exists, a reset link containing a token is sent to the user.
+    """
+    serializer_class = PasswordResetSerializer
+    permission_classes = [] # Allow any user to request a reset
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+            # Generate token and uid
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Construct reset link (Frontend URL)
+            # This link points to the frontend page where the user enters the new password
+            reset_link = f"http://localhost:4200/reset-password/{uid}/{token}"
+
+            # Offload email sending
+            queue = django_rq.get_queue('default', autocommit=True)
+            queue.enqueue(send_password_reset_email, user.email, reset_link)
+            
+        except CustomUser.DoesNotExist:
+            # We return 200 even if the user does not exist to prevent email enumeration
+            pass
+
+        return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)

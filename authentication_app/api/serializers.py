@@ -50,3 +50,11 @@ class LoginSerializer(serializers.Serializer):
     """
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    """
+    Serializer for the password reset request.
+    Validates that an email is provided.
+    """
+    email = serializers.EmailField()
