@@ -1,4 +1,4 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions, views
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -119,3 +119,38 @@ class LoginView(generics.GenericAPIView):
             return response
         
         return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutView(views.APIView):
+    """
+    API endpoint for user logout.
+    
+    It invalidates the refresh token (blacklisting) and removes the authentication cookies.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # Get the refresh token from the cookie
+            refresh_token = request.COOKIES.get('refresh_token')
+            
+            if refresh_token:
+                # Create a RefreshToken object and blacklist it
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+
+            # Prepare the response
+            response = Response(
+                {"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."},
+                status=status.HTTP_200_OK
+            )
+
+            # Delete the cookies
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            
+            return response
+
+        except Exception as e:
+            # According to docs, if refresh token is missing or invalid, return 400
+            return Response({"error": "Refresh token is missing or invalid."}, status=status.HTTP_400_BAD_REQUEST)

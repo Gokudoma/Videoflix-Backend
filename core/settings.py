@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third Party Apps
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',    
     'django_rq',
     # Custom Apps
@@ -141,6 +142,7 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Videoflix <no-reply@videof
 # --- REST Framework Configuration (JWT) ---
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # Use our custom class that reads from cookies
+        'authentication_app.api.authentication.CookieJWTAuthentication', 
     ),
 }
