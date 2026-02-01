@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 import django_rq
 
-from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetSerializer
+from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetSerializer, SetNewPasswordSerializer
 from ..models import CustomUser
 from ..tasks import send_activation_email, send_password_reset_email
 
@@ -216,3 +216,34 @@ class PasswordResetView(generics.GenericAPIView):
             pass
 
         return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)
+    
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    """
+    API endpoint to set a new password.
+    
+    Validates the uid and token from the email link.
+    If valid, sets the new password for the user.
+    """
+    serializer_class = SetNewPasswordSerializer
+    permission_classes = [] # Allow any user (link contains the auth proof)
+
+    def post(self, request, uidb64, token):
+        try:
+            # Decode the user ID
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            return Response({'error': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the token is valid for this user
+        if user is not None and default_token_generator.check_token(user, token):
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Set the new password
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({"detail": "Your Password has been successfully reset."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Link is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
