@@ -23,4 +23,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('django-rq/', include('django_rq.urls')),
     path('api/', include('authentication_app.api.urls')),
-]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('api/', include('video_app.api.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
