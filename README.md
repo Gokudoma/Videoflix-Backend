@@ -49,7 +49,7 @@ The project consists of a **Django Backend** (DRF) handling the API, authenticat
 ```bash
 git clone [https://github.com/YOUR-USERNAME/videoflix-backend.git](https://github.com/YOUR-USERNAME/videoflix-backend.git)
 cd videoflix-backend
-
+```
 
 2. Environment Configuration (.env)
 Create a .env file in the root directory (same level as docker-compose.yml) and add your configuration:
