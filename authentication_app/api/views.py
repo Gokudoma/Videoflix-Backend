@@ -12,6 +12,7 @@ import django_rq
 from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetSerializer, SetNewPasswordSerializer
 from ..models import CustomUser
 from ..tasks import send_activation_email, send_password_reset_email
+from .utils import account_activation_token
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -26,12 +27,13 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate Token and UID
-        token = default_token_generator.make_token(user)
+        # Generate Token and UID using the custom generator
+        token = account_activation_token.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
         # Construct Activation URL
-        activation_link = f"http://localhost:8000/api/activate/{uid}/{token}/"
+        # Ensure the frontend URL matches your configuration (e.g., localhost:4200 or 5500)
+        activation_link = f"http://localhost:5500/activate/{uid}/{token}"
 
         # Offload email sending to the RQ Worker
         queue = django_rq.get_queue('default', autocommit=True)
@@ -59,7 +61,8 @@ class ActivateAccountView(generics.GenericAPIView):
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
             user = None
 
-        if user is not None and default_token_generator.check_token(user, token):
+        # Check token using the custom generator
+        if user is not None and account_activation_token.check_token(user, token):
             user.is_active = True
             user.save()
             return Response({"message": "Account successfully activated."}, status=status.HTTP_200_OK)
@@ -205,7 +208,7 @@ class PasswordResetView(generics.GenericAPIView):
             
             # Construct reset link (Frontend URL)
             # This link points to the frontend page where the user enters the new password
-            reset_link = f"http://localhost:4200/reset-password/{uid}/{token}"
+            reset_link = f"http://localhost:5500/reset-password/{uid}/{token}"
 
             # Offload email sending
             queue = django_rq.get_queue('default', autocommit=True)
