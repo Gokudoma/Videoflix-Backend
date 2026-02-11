@@ -55,29 +55,37 @@ cd videoflix-backend
 Create a .env file in the root directory (same level as docker-compose.yml) and add your configuration:
 
 # --- Django Settings ---
+```bash
 SECRET_KEY=your-super-secret-key-change-me
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
+```
 
 # --- Database (PostgreSQL) ---
+```bash
 DB_NAME=videoflix_db
 DB_USER=videoflix_user
 DB_PASSWORD=supersecretpassword
 DB_HOST=db
 DB_PORT=5432
+```
 
 # --- Redis (Task Queue) ---
+```bash
 REDIS_LOCATION=redis://redis:6379/1
+```
 
 # --- Email Settings (SMTP) ---
 # For development, you can use the console backend (prints to terminal)
 # For production, use a real SMTP server (e.g., Gmail)
+```bash
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=Videoflix <no-reply@videoflix.com>
+```
 
 # --- Frontend Connection ---
 # Used to generate correct links in emails
@@ -86,8 +94,9 @@ FRONTEND_URL=http://localhost:5500
 
 3. Start with Docker
 Launch the entire stack (Database, Backend, Redis, Worker) with a single command:
-
+```bash
 docker-compose up --build
+```
 
 Note: The first launch might take a few minutes as Docker images are being built.
 
@@ -96,11 +105,13 @@ Note: The first launch might take a few minutes as Docker images are being built
 Open a new terminal window (while Docker is running) and execute:
 
 # 1. Apply database migrations
+```bash
 docker-compose exec web python manage.py migrate
-
+```
 # 2. Create an admin user (to upload videos)
+```bash
 docker-compose exec web python manage.py createsuperuser
-
+```
 
 🎮 Usage Guide
 Admin Panel (Uploads)
