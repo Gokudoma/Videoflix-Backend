@@ -114,7 +114,6 @@ RQ_QUEUES = {
         'PORT': int(os.environ.get("REDIS_PORT", 6379)),
         'DB': int(os.environ.get("REDIS_DB", 0)),
         'DEFAULT_TIMEOUT': 900,
-        # 'REDIS_CLIENT_KWARGS': {}, # Not needed for now
     },
 }
 
