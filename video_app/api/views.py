@@ -14,10 +14,10 @@ from .serializers import VideoSerializer
 
 class VideoListView(generics.ListAPIView):
     """
-    API endpoint that returns a list of all videos.
+    API endpoint that returns a list of all videos ordered by creation date (DESC).
     Requires JWT authentication.
     """
-    queryset = Video.objects.all()
+    queryset = Video.objects.all().order_by('-created_at')
     serializer_class = VideoSerializer
     permission_classes = [IsAuthenticated]
 
@@ -67,4 +67,4 @@ class VideoSegmentView(views.APIView):
             raise Http404("Segment not found.")
 
         # Return the binary segment file with the correct content type
-        return FileResponse(open(segment_path, 'rb'), content_type='video/MP2T')    
+        return FileResponse(open(segment_path, 'rb'), content_type='video/MP2T')

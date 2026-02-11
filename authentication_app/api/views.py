@@ -1,18 +1,22 @@
-from rest_framework import generics, status, permissions, views
-from rest_framework.response import Response
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
+import django_rq
+
+from django.conf import settings
 from django.contrib.auth import authenticate
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+
+from rest_framework import generics, permissions, status, views
+from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
-import django_rq
 
-from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetSerializer, SetNewPasswordSerializer
+from .serializers import LoginSerializer, PasswordResetSerializer, RegistrationSerializer, SetNewPasswordSerializer
+from .utils import account_activation_token
 from ..models import CustomUser
 from ..tasks import send_activation_email, send_password_reset_email
-from .utils import account_activation_token
+
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -31,9 +35,9 @@ class RegisterView(generics.CreateAPIView):
         token = account_activation_token.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        # Construct Activation URL
-        # Ensure the frontend URL matches your configuration (e.g., localhost:4200 or 5500)
-        activation_link = f"http://localhost:5500/pages/auth/activate.html?uid={uid}&token={token}"
+        # Construct Activation URL dynamically
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5500')
+        activation_link = f"{frontend_url}/pages/auth/activate.html?uid={uid}&token={token}"
 
         # Offload email sending to the RQ Worker
         queue = django_rq.get_queue('default', autocommit=True)
@@ -206,9 +210,9 @@ class PasswordResetView(generics.GenericAPIView):
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
-            # Construct reset link (Frontend URL)
-            # This link points to the frontend page where the user enters the new password
-            reset_link = f"http://localhost:5500/reset-password/{uid}/{token}"
+            # Construct reset link dynamically
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5500')
+            reset_link = f"{frontend_url}/reset-password/{uid}/{token}"
 
             # Offload email sending
             queue = django_rq.get_queue('default', autocommit=True)
