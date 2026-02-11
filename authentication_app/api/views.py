@@ -33,7 +33,7 @@ class RegisterView(generics.CreateAPIView):
 
         # Construct Activation URL
         # Ensure the frontend URL matches your configuration (e.g., localhost:4200 or 5500)
-        activation_link = f"http://localhost:5500/activate/{uid}/{token}"
+        activation_link = f"http://localhost:5500/pages/auth/activate.html?uid={uid}&token={token}"
 
         # Offload email sending to the RQ Worker
         queue = django_rq.get_queue('default', autocommit=True)
