@@ -7,11 +7,7 @@ class CustomUser(AbstractUser):
     instead of the username.
     """
     email = models.EmailField(unique=True)
-
-    # We use the email as the primary identifier for login
     USERNAME_FIELD = 'email'
-    
-    # Username is still required by Django internally, but we can make it secondary
     REQUIRED_FIELDS = ['username']
 
     def __str__(self):

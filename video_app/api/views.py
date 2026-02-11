@@ -32,17 +32,13 @@ class VideoStreamingView(views.APIView):
 
     def get(self, request, movie_id, resolution):
         video = get_object_or_404(Video, pk=movie_id)
-        
-        # Construct the file path based on the resolution
-        # Example: /media/videos/myvideo_480p.m3u8
         video_path = video.video_file.path
         base, _ = os.path.splitext(video_path)
         playlist_path = f"{base}_{resolution}.m3u8"
 
         if not os.path.exists(playlist_path):
             raise Http404("Video or manifest not found.")
-
-        # Return the file with the correct MIME type for HLS
+        
         return FileResponse(open(playlist_path, 'rb'), content_type='application/vnd.apple.mpegurl')
     
     
@@ -57,14 +53,11 @@ class VideoSegmentView(views.APIView):
     def get(self, request, movie_id, resolution, segment):
         video = get_object_or_404(Video, pk=movie_id)
         
-        # The segments are located in the same directory as the original video file
         video_directory = os.path.dirname(video.video_file.path)
         
-        # Construct the full path to the requested segment
         segment_path = os.path.join(video_directory, segment)
 
         if not os.path.exists(segment_path):
             raise Http404("Segment not found.")
 
-        # Return the binary segment file with the correct content type
         return FileResponse(open(segment_path, 'rb'), content_type='video/MP2T')

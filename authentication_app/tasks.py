@@ -14,13 +14,13 @@ def send_activation_email(email, activation_url):
     """
     subject = "Activate your Videoflix Account"
     
-    # Render HTML content
+
     html_message = render_to_string('authentication_app/activation_email.html', {
         'activation_url': activation_url,
         'app_name': "Videoflix"
     })
     
-    # Create plain text version as fallback
+
     plain_message = strip_tags(html_message)
     from_email = settings.DEFAULT_FROM_EMAIL
 
@@ -43,13 +43,13 @@ def send_password_reset_email(email, reset_url):
     """
     subject = "Reset your Videoflix Password"
     
-    # Render HTML content
+
     html_message = render_to_string('authentication_app/password_reset_email.html', {
         'reset_url': reset_url,
         'app_name': "Videoflix"
     })
     
-    # Create plain text version as fallback
+
     plain_message = strip_tags(html_message)
     from_email = settings.DEFAULT_FROM_EMAIL
 
