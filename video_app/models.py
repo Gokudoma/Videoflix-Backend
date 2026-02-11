@@ -14,7 +14,7 @@ class Video(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     video_file = models.FileField(upload_to='videos', blank=True, null=True)
     thumbnail = models.FileField(upload_to='thumbnails', blank=True, null=True)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='drama') # NEU
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='drama') 
 
     def __str__(self):
         return self.title

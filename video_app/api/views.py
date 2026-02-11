@@ -1,9 +1,14 @@
+# 1. Standard Library Imports
 import os
-from rest_framework import generics, views 
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response # Falls noch nicht da
-from django.shortcuts import get_object_or_404
+
+# 2. Third-Party Library Imports (Django & REST Framework)
 from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, views
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+# 3. Local Application Imports
 from ..models import Video
 from .serializers import VideoSerializer
 

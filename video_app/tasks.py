@@ -1,5 +1,6 @@
-import subprocess
 import os
+import subprocess
+
 
 def convert_480p(source):
     """
