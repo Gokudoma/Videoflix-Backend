@@ -18,7 +18,6 @@ def video_post_save(sender, instance, created, **kwargs):
         print(f'New video created: {instance.id}')
         queue = django_rq.get_queue('default', autocommit=True)
         
-        # Enqueue all formats
         queue.enqueue(convert_480p, instance.video_file.path)
         queue.enqueue(convert_720p, instance.video_file.path)
         queue.enqueue(convert_1080p, instance.video_file.path)

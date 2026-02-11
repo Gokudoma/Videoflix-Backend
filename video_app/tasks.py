@@ -31,7 +31,6 @@ def _convert(source, label, resolution_cmd):
     base, _ = os.path.splitext(source)
     target = f"{base}_{label}.m3u8"
 
-    # HLS conversion command
     cmd = [
         'ffmpeg', '-i', source, '-s', resolution_cmd, 
         '-c:v', 'libx264', '-crf', '23', '-c:a', 'aac', '-strict', '-2', 

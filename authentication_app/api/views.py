@@ -31,15 +31,12 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate Token and UID using the custom generator
         token = account_activation_token.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        # Construct Activation URL dynamically
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5500')
         activation_link = f"{frontend_url}/pages/auth/activate.html?uid={uid}&token={token}"
 
-        # Offload email sending to the RQ Worker
         queue = django_rq.get_queue('default', autocommit=True)
         queue.enqueue(send_activation_email, user.email, activation_link)
 
@@ -65,7 +62,6 @@ class ActivateAccountView(generics.GenericAPIView):
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
             user = None
 
-        # Check token using the custom generator
         if user is not None and account_activation_token.check_token(user, token):
             user.is_active = True
             user.save()
@@ -91,7 +87,6 @@ class LoginView(generics.GenericAPIView):
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
-            # Generate Tokens
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             
@@ -105,7 +100,6 @@ class LoginView(generics.GenericAPIView):
 
             response = Response(response_data, status=status.HTTP_200_OK)
 
-            # Set HttpOnly Cookies
             response.set_cookie(
                 'access_token', 
                 access_token, 
@@ -197,7 +191,7 @@ class PasswordResetView(generics.GenericAPIView):
     If the email exists, a reset link containing a token is sent to the user.
     """
     serializer_class = PasswordResetSerializer
-    permission_classes = [] # Allow any user to request a reset
+    permission_classes = [] 
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -206,20 +200,16 @@ class PasswordResetView(generics.GenericAPIView):
         
         try:
             user = CustomUser.objects.get(email=email)
-            # Generate token and uid
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
-            # Construct reset link dynamically
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5500')
-            reset_link = f"{frontend_url}/reset-password/{uid}/{token}"
+            reset_link = f"{frontend_url}/pages/auth/confirm_password.html?uid={uid}&token={token}"
 
-            # Offload email sending
             queue = django_rq.get_queue('default', autocommit=True)
             queue.enqueue(send_password_reset_email, user.email, reset_link)
             
         except CustomUser.DoesNotExist:
-            # We return 200 even if the user does not exist to prevent email enumeration
             pass
 
         return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)
@@ -233,22 +223,19 @@ class PasswordResetConfirmView(generics.GenericAPIView):
     If valid, sets the new password for the user.
     """
     serializer_class = SetNewPasswordSerializer
-    permission_classes = [] # Allow any user (link contains the auth proof)
+    permission_classes = [] 
 
     def post(self, request, uidb64, token):
         try:
-            # Decode the user ID
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = CustomUser.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
             return Response({'error': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if the token is valid for this user
         if user is not None and default_token_generator.check_token(user, token):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
-            # Set the new password
             user.set_password(serializer.validated_data['new_password'])
             user.save()
             return Response({"detail": "Your Password has been successfully reset."}, status=status.HTTP_200_OK)
