@@ -122,30 +122,29 @@ class LogoutView(views.APIView):
     """
     API endpoint for user logout.
     
-    It invalidates the refresh token (blacklisting) and removes the authentication cookies.
+    It attempts to blacklist the refresh token and always removes the authentication cookies.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:
             refresh_token = request.COOKIES.get('refresh_token')
-            
             if refresh_token:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
+        except (TokenError, Exception):
+            # Even if the token is invalid or missing, we want to clear the cookies
+            pass
 
-            response = Response(
-                {"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."},
-                status=status.HTTP_200_OK
-            )
+        response = Response(
+            {"detail": "Logout successful."},
+            status=status.HTTP_200_OK
+        )
 
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token')
-            
-            return response
-
-        except Exception as e:
-            return Response({"error": "Refresh token is missing or invalid."}, status=status.HTTP_400_BAD_REQUEST)
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        
+        return response
 
 
 class CookieTokenRefreshView(TokenRefreshView):

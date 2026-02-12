@@ -51,70 +51,36 @@ git clone [https://github.com/YOUR-USERNAME/videoflix-backend.git](https://githu
 cd videoflix-backend
 ```
 
-2. Environment Configuration (.env)
-Create a .env file in the root directory (same level as docker-compose.yml) and add your configuration:
+2. Environment Configuration
+Create a .env file from the template and adjust your configuration if necessary:
+```bash 
+cp .env.template .env
+``` 
 
-# --- Django Settings ---
-# --- Database (PostgreSQL) ---
-# --- Redis (Task Queue) ---
-# --- Email Settings (SMTP) ---
-# For development, you can use the console backend (prints to terminal)
-# For production, use a real SMTP server (e.g., Gmail)
-```bash
-DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_PASSWORD=adminpassword
-DJANGO_SUPERUSER_EMAIL=admin@example.com
-
-SECRET_KEY="django-insecure-lp6h18zq4@z30symy*oz)+hp^uoti48r_ix^qc-m@&yfxd7&hn"
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-CSRF_TRUSTED_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
-
-DB_NAME=your_database_name
-DB_USER=your_database_user
-DB_PASSWORD=your_database_password
-DB_HOST=db
-DB_PORT=5432
-
-REDIS_HOST=redis
-REDIS_LOCATION=redis://redis:6379/1
-REDIS_PORT=6379
-REDIS_DB=0
-
-EMAIL_HOST=smtp.example.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your_email_user
-EMAIL_HOST_PASSWORD=your_email_user_password
-EMAIL_USE_TLS=True
-EMAIL_USE_SSL=False
-DEFAULT_FROM_EMAIL=default_from_email
-```
-
-# --- Frontend Connection ---
-# Used to generate correct links in emails
-FRONTEND_URL=http://localhost:5500
-
+Open the .env file and verify the settings (e.g. Email Server, Database credentials).
 
 3. Start with Docker
-Launch the entire stack (Database, Backend, Redis, Worker) with a single command:
-```bash
+Launch the entire stack (Database, Backend, Redis, Worker). The entrypoint script will automatically handle database migrations and create a superuser if configured in .env.
+
+```bash 
 docker-compose up --build
 ```
-
 Note: The first launch might take a few minutes as Docker images are being built.
 
 
 🎮 Usage Guide
 Admin Panel (Uploads)
+
 URL: http://localhost:8000/admin/
 
-Log in with your superuser account.
+Log in with the superuser account defined in your .env.
 
 Navigate to Videos and upload a new file.
 
 Watch the magic: The background worker will pick up the file and start converting it. You can see the progress in your Docker terminal logs.
 
 Frontend (Streaming)
+
 URL: http://localhost:5500 (assuming you serve it via Live Server or similar).
 
 Register a new user.
@@ -122,13 +88,6 @@ Register a new user.
 Check your console (or email) for the Activation Link.
 
 Log in and click on a video to start streaming!
-
-🧪 Testing
-To run the automated test suite for the backend:
-
-
-docker-compose exec web python manage.py test
-
 
 📄 License
 This project was created for educational purposes.
