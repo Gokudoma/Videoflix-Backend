@@ -104,18 +104,6 @@ docker-compose up --build
 Note: The first launch might take a few minutes as Docker images are being built.
 
 
-4. Database Migration & Admin User
-Open a new terminal window (while Docker is running) and execute:
-
-# 1. Apply database migrations
-```bash
-docker-compose exec web python manage.py migrate
-```
-# 2. Create an admin user (to upload videos)
-```bash
-docker-compose exec web python manage.py createsuperuser
-```
-
 🎮 Usage Guide
 Admin Panel (Uploads)
 URL: http://localhost:8000/admin/
